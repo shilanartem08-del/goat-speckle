@@ -7,10 +7,12 @@
 <meta name="description" content="Полный прайс-лист маникюрной студии Goat Speckle: маникюр, педикюр, покрытие, дизайн ногтей, наращивание.">
 <link rel="icon" type="image/png" href="images/favicon-256.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
+
+<a href="#main-content" class="skip-link">Перейти к содержимому</a>
 
 <header class="site-header">
   <div class="header-inner container">
@@ -18,10 +20,10 @@
       <img src="images/logo-nav.jpg" alt="Goat Speckle logo">
       Goat Speckle
     </a>
-    <button class="nav-toggle" aria-label="Меню">
+    <button class="nav-toggle" aria-label="Открыть меню" aria-expanded="false" aria-controls="main-nav">
       <span></span><span></span><span></span>
     </button>
-    <nav class="main-nav">
+    <nav class="main-nav" id="main-nav" aria-label="Основная навигация">
       <a href="index.html">Главная</a>
       <a href="about.html">О нас</a>
       <a href="services.html">Услуги</a>
@@ -33,7 +35,7 @@
   </div>
 </header>
 
-<main>
+<main id="main-content">
 
   <section class="page-hero">
     <div class="container">

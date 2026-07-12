@@ -7,10 +7,12 @@
 <meta name="description" content="Контакты маникюрной студии Goat Speckle: телефон, почта, телеграм. Форма для записи онлайн.">
 <link rel="icon" type="image/png" href="images/favicon-256.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
+
+<a href="#main-content" class="skip-link">Перейти к содержимому</a>
 
 <header class="site-header">
   <div class="header-inner container">
@@ -18,10 +20,10 @@
       <img src="images/logo-nav.jpg" alt="Goat Speckle logo">
       Goat Speckle
     </a>
-    <button class="nav-toggle" aria-label="Меню">
+    <button class="nav-toggle" aria-label="Открыть меню" aria-expanded="false" aria-controls="main-nav">
       <span></span><span></span><span></span>
     </button>
-    <nav class="main-nav">
+    <nav class="main-nav" id="main-nav" aria-label="Основная навигация">
       <a href="index.html">Главная</a>
       <a href="about.html">О нас</a>
       <a href="services.html">Услуги</a>
@@ -33,7 +35,7 @@
   </div>
 </header>
 
-<main>
+<main id="main-content">
 
   <section class="page-hero">
     <div class="container">
@@ -49,35 +51,36 @@
 
         <div>
           <ul class="contact-list">
-            <li><span class="icon">📞</span> <a href="tel:+79944215271">+7 994 421-52-71</a></li>
-            <li><span class="icon">✉️</span> <a href="mailto:shilanartem08@gmail.com">shilanartem08@gmail.com</a></li>
-            <li><span class="icon">💬</span> <a href="https://t.me/oppuoo" target="_blank" rel="noopener">Telegram: @oppuoo</a></li>
-            <li><span class="icon">📢</span> <a href="https://t.me/+oBoILEmNnMFiZjgy" target="_blank" rel="noopener">Наш Telegram-канал</a></li>
+            <li><span class="icon"><svg class="icon-svg" viewBox="0 0 24 24"><path d="M5 4h3l2 5-2 1.5a11 11 0 0 0 5.5 5.5L15 14l5 2v3a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2Z"/></svg></span> <a href="tel:+79944215271">+7 994 421-52-71</a></li>
+            <li><span class="icon"><svg class="icon-svg" viewBox="0 0 24 24"><rect x="3.5" y="5.5" width="17" height="13" rx="2"/><path d="M4 6.5 12 13l8-6.5"/></svg></span> <a href="mailto:shilanartem08@gmail.com">shilanartem08@gmail.com</a></li>
+            <li><span class="icon"><svg class="icon-svg" viewBox="0 0 24 24"><path d="M4 5.5h16v10H9l-4 3.5v-3.5H4v-10Z"/><path d="M8 9.5h8M8 12.5h5"/></svg></span> <a href="https://t.me/oppuoo" target="_blank" rel="noopener">Telegram: @oppuoo</a></li>
+            <li><span class="icon"><svg class="icon-svg" viewBox="0 0 24 24"><path d="M4 10v4h3l6 4V6l-6 4H4Z"/><path d="M16 9a4 4 0 0 1 0 6M18.5 6.5a8 8 0 0 1 0 11"/></svg></span> <a href="https://t.me/+oBoILEmNnMFiZjgy" target="_blank" rel="noopener">Наш Telegram-канал</a></li>
           </ul>
 
           <div class="card" style="margin-top: 10px;">
-            <h3>⏰ Режим работы</h3>
+            <div class="icon"><svg class="icon-svg" viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2"/><path d="M9 3h6M5 5l1.5 1.5M19 5l-1.5 1.5"/></svg></div>
+            <h3>Режим работы</h3>
             <p>Ежедневно с 10:00 до 21:00, без выходных.<br>Запись обязательна — свободные окошки уточняйте по телефону или в Telegram.</p>
           </div>
         </div>
 
         <div class="contact-form">
-          <h3 style="font-family: var(--font-head); margin-top:0;">Форма записи</h3>
-          <form id="contact-form">
-            <label for="name">Ваше имя*</label>
-            <input type="text" id="name" name="name" placeholder="Как к вам обращаться" required>
+          <h3 style="margin-top:0;">Форма записи</h3>
+          <form id="contact-form" novalidate>
+            <label for="name">Ваше имя <span class="required" aria-hidden="true">*</span><span class="visually-hidden">обязательное поле</span></label>
+            <input type="text" id="name" name="name" placeholder="Как к вам обращаться" autocomplete="name" required aria-required="true" aria-describedby="name-error">
+            <p class="field-error-msg" id="name-error" role="alert"></p>
 
-            <label for="phone">Телефон*</label>
-            <input type="tel" id="phone" name="phone" placeholder="+7 ___ ___-__-__" required>
+            <label for="phone">Телефон <span class="required" aria-hidden="true">*</span><span class="visually-hidden">обязательное поле</span></label>
+            <input type="tel" id="phone" name="phone" placeholder="+7 ___ ___-__-__" autocomplete="tel" inputmode="tel" required aria-required="true" aria-describedby="phone-error">
+            <p class="field-error-msg" id="phone-error" role="alert"></p>
 
             <label for="message">Комментарий</label>
-            <textarea id="message" name="message" placeholder="Какая услуга вас интересует, удобная дата и время"></textarea>
+            <textarea id="message" name="message" placeholder="Какая услуга вас интересует, удобная дата и время" autocomplete="off"></textarea>
 
             <button type="submit" class="btn btn-primary">Отправить заявку</button>
 
-            <p class="form-note" id="form-success" style="display:none; color:#2e7d32; font-weight:700;">
-              Спасибо! Сейчас откроется почтовый клиент для отправки заявки — если этого не произошло, напишите нам напрямую на shilanartem08@gmail.com.
-            </p>
+            <p class="form-status" id="form-status"></p>
             <p class="form-note">Отправляя форму, вы соглашаетесь на обработку персональных данных.</p>
           </form>
         </div>

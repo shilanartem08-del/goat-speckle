@@ -7,12 +7,28 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (toggle && nav) {
     toggle.addEventListener("click", () => {
-      nav.classList.toggle("open");
+      const isOpen = nav.classList.toggle("open");
+      toggle.setAttribute("aria-expanded", String(isOpen));
+      toggle.setAttribute("aria-label", isOpen ? "Закрыть меню" : "Открыть меню");
     });
 
     // закрывать меню при клике на ссылку (мобильная версия)
     nav.querySelectorAll("a").forEach((link) => {
-      link.addEventListener("click", () => nav.classList.remove("open"));
+      link.addEventListener("click", () => {
+        nav.classList.remove("open");
+        toggle.setAttribute("aria-expanded", "false");
+        toggle.setAttribute("aria-label", "Открыть меню");
+      });
+    });
+
+    // закрывать меню по Escape
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && nav.classList.contains("open")) {
+        nav.classList.remove("open");
+        toggle.setAttribute("aria-expanded", "false");
+        toggle.setAttribute("aria-label", "Открыть меню");
+        toggle.focus();
+      }
     });
   }
 
@@ -22,21 +38,74 @@ document.addEventListener("DOMContentLoaded", () => {
     const href = link.getAttribute("href");
     if (href === currentPage) {
       link.classList.add("active");
+      link.setAttribute("aria-current", "page");
     }
   });
 
   // Обработка формы обратной связи
   const form = document.getElementById("contact-form");
   if (form) {
+    const nameInput = form.querySelector("#name");
+    const phoneInput = form.querySelector("#phone");
+    const submitBtn = form.querySelector('button[type="submit"]');
+    const statusBox = document.getElementById("form-status");
+
+    function showFieldError(input, message) {
+      input.classList.add("field-error");
+      input.setAttribute("aria-invalid", "true");
+      const errorEl = document.getElementById(input.id + "-error");
+      if (errorEl) {
+        errorEl.textContent = message;
+        errorEl.classList.add("visible");
+      }
+    }
+
+    function clearFieldError(input) {
+      input.classList.remove("field-error");
+      input.removeAttribute("aria-invalid");
+      const errorEl = document.getElementById(input.id + "-error");
+      if (errorEl) {
+        errorEl.classList.remove("visible");
+        errorEl.textContent = "";
+      }
+    }
+
+    [nameInput, phoneInput].forEach((input) => {
+      if (input) {
+        input.addEventListener("input", () => clearFieldError(input));
+      }
+    });
+
+    function showStatus(type, message) {
+      if (!statusBox) return;
+      statusBox.textContent = message;
+      statusBox.classList.remove("success", "error");
+      statusBox.classList.add("visible", type);
+      statusBox.setAttribute("role", "status");
+    }
+
     form.addEventListener("submit", (e) => {
       e.preventDefault();
 
-      const name = form.querySelector("#name").value.trim();
-      const phone = form.querySelector("#phone").value.trim();
+      const name = nameInput.value.trim();
+      const phone = phoneInput.value.trim();
       const message = form.querySelector("#message").value.trim();
 
-      if (!name || !phone) {
-        alert("Пожалуйста, заполните имя и телефон 🐐");
+      let hasError = false;
+
+      if (!name) {
+        showFieldError(nameInput, "Пожалуйста, укажите ваше имя");
+        hasError = true;
+      }
+
+      if (!phone) {
+        showFieldError(phoneInput, "Пожалуйста, укажите номер телефона");
+        hasError = true;
+      }
+
+      if (hasError) {
+        showStatus("error", "Проверьте, пожалуйста, обязательные поля ниже.");
+        (nameInput.classList.contains("field-error") ? nameInput : phoneInput).focus();
         return;
       }
 
@@ -46,13 +115,22 @@ document.addEventListener("DOMContentLoaded", () => {
         `Имя: ${name}\nТелефон: ${phone}\nСообщение: ${message || "—"}`
       );
 
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Открываем почту…";
+
       window.location.href = `mailto:shilanartem08@gmail.com?subject=${subject}&body=${body}`;
 
-      const successMsg = document.getElementById("form-success");
-      if (successMsg) {
-        successMsg.style.display = "block";
-      }
+      showStatus(
+        "success",
+        "Спасибо! Сейчас откроется почтовый клиент для отправки заявки — если этого не произошло, напишите нам напрямую на shilanartem08@gmail.com."
+      );
+
       form.reset();
+
+      setTimeout(() => {
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Отправить заявку";
+      }, 2500);
     });
   }
 });

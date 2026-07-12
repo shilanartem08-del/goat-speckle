@@ -7,10 +7,12 @@
 <meta name="description" content="Новости и акции маникюрной студии Goat Speckle: новые услуги, скидки, изменения графика работы.">
 <link rel="icon" type="image/png" href="images/favicon-256.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
+
+<a href="#main-content" class="skip-link">Перейти к содержимому</a>
 
 <header class="site-header">
   <div class="header-inner container">
@@ -18,10 +20,10 @@
       <img src="images/logo-nav.jpg" alt="Goat Speckle logo">
       Goat Speckle
     </a>
-    <button class="nav-toggle" aria-label="Меню">
+    <button class="nav-toggle" aria-label="Открыть меню" aria-expanded="false" aria-controls="main-nav">
       <span></span><span></span><span></span>
     </button>
-    <nav class="main-nav">
+    <nav class="main-nav" id="main-nav" aria-label="Основная навигация">
       <a href="index.html">Главная</a>
       <a href="about.html">О нас</a>
       <a href="services.html">Услуги</a>
@@ -33,7 +35,7 @@
   </div>
 </header>
 
-<main>
+<main id="main-content">
 
   <section class="page-hero">
     <div class="container">
@@ -48,7 +50,7 @@
       <div class="grid grid-3">
 
         <article class="post-card">
-          <div class="post-thumb">🎉</div>
+          <div class="post-thumb"><svg class="icon-svg" viewBox="0 0 24 24"><path d="m4 20 4-11 7 7-11 4Z"/><path d="M13 4l1.5 1.5M17 3l1 2M20 7l-2 1M11 8l1 1"/></svg></div>
           <div class="post-body">
             <div class="post-date">10 июля 2026</div>
             <h3>Запустили сайт Goat Speckle!</h3>
@@ -58,7 +60,7 @@
         </article>
 
         <article class="post-card">
-          <div class="post-thumb">🏷️</div>
+          <div class="post-thumb"><svg class="icon-svg" viewBox="0 0 24 24"><path d="M12 3h6a2 2 0 0 1 2 2v6L11 20l-8-8L12 3Z"/><circle cx="16" cy="8" r="1.3" fill="currentColor" stroke="none"/></svg></div>
           <div class="post-body">
             <div class="post-date">1 июля 2026</div>
             <h3>Скидка 15% на первый визит</h3>
@@ -68,7 +70,7 @@
         </article>
 
         <article class="post-card">
-          <div class="post-thumb">🆕</div>
+          <div class="post-thumb"><svg class="icon-svg" viewBox="0 0 24 24"><path d="M12 3v4M12 17v4M3 12h4M17 12h4"/><circle cx="12" cy="12" r="3"/></svg></div>
           <div class="post-body">
             <div class="post-date">20 июня 2026</div>
             <h3>Новая услуга: укрепление полигелем</h3>
@@ -78,7 +80,7 @@
         </article>
 
         <article class="post-card">
-          <div class="post-thumb">📅</div>
+          <div class="post-thumb"><svg class="icon-svg" viewBox="0 0 24 24"><rect x="4" y="5.5" width="16" height="14" rx="2"/><path d="M4 10h16M8 3.5v3M16 3.5v3"/><path d="M8 14h2M14 14h2M8 17h2"/></svg></div>
           <div class="post-body">
             <div class="post-date">5 июня 2026</div>
             <h3>Изменения в графике работы</h3>
@@ -88,7 +90,7 @@
         </article>
 
         <article class="post-card">
-          <div class="post-thumb">📱</div>
+          <div class="post-thumb"><svg class="icon-svg" viewBox="0 0 24 24"><rect x="7" y="3" width="10" height="18" rx="2"/><path d="M11 18h2"/></svg></div>
           <div class="post-body">
             <div class="post-date">22 мая 2026</div>
             <h3>Мы в Telegram</h3>
@@ -98,7 +100,7 @@
         </article>
 
         <article class="post-card">
-          <div class="post-thumb">🎁</div>
+          <div class="post-thumb"><svg class="icon-svg" viewBox="0 0 24 24"><rect x="4" y="9" width="16" height="11" rx="1.5"/><path d="M4 9h16v3H4z"/><path d="M12 9v11"/><path d="M12 9C10 6 7 5 6.5 7 6 9 9 9 12 9Zm0 0c2-3 5-4 5.5-2 .5 2-2.5 2-5.5 2Z"/></svg></div>
           <div class="post-body">
             <div class="post-date">10 мая 2026</div>
             <h3>Подарочные сертификаты</h3>

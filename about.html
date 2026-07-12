@@ -7,10 +7,12 @@
 <meta name="description" content="История и ценности маникюрной студии Goat Speckle: команда мастеров, подход к работе и стерильности.">
 <link rel="icon" type="image/png" href="images/favicon-256.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
+
+<a href="#main-content" class="skip-link">Перейти к содержимому</a>
 
 <header class="site-header">
   <div class="header-inner container">
@@ -18,10 +20,10 @@
       <img src="images/logo-nav.jpg" alt="Goat Speckle logo">
       Goat Speckle
     </a>
-    <button class="nav-toggle" aria-label="Меню">
+    <button class="nav-toggle" aria-label="Открыть меню" aria-expanded="false" aria-controls="main-nav">
       <span></span><span></span><span></span>
     </button>
-    <nav class="main-nav">
+    <nav class="main-nav" id="main-nav" aria-label="Основная навигация">
       <a href="index.html">Главная</a>
       <a href="about.html">О нас</a>
       <a href="services.html">Услуги</a>
@@ -33,7 +35,7 @@
   </div>
 </header>
 
-<main>
+<main id="main-content">
 
   <section class="page-hero">
     <div class="container">
@@ -47,7 +49,7 @@
     <div class="container">
       <div class="grid grid-2" style="align-items:center;">
         <div>
-          <img src="images/logo-hero.jpg" alt="Goat Speckle студия" style="border:3px solid var(--black); border-radius: var(--radius); box-shadow: var(--shadow);">
+          <img src="images/logo-hero.jpg" alt="Goat Speckle студия" style="border:3px solid var(--color-ink); border-radius: var(--radius-lg); box-shadow: var(--shadow-soft);">
         </div>
         <div>
           <h2 class="section-title" style="text-align:left;">Наша история</h2>
@@ -64,17 +66,17 @@
       <div class="dot-divider"><span></span><span></span><span></span></div>
       <div class="grid grid-3">
         <div class="card">
-          <div class="icon">🧴</div>
+          <div class="icon"><svg class="icon-svg" viewBox="0 0 24 24"><path d="M10 3h4v3l2 2v11a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2V8l2-2V3Z"/><path d="M9 12h6M9 15.5h6"/></svg></div>
           <h3>Качественные материалы</h3>
           <p>Работаем только с проверенными брендами гель-лаков и уходовой косметики.</p>
         </div>
         <div class="card">
-          <div class="icon">🙌</div>
+          <div class="icon"><svg class="icon-svg" viewBox="0 0 24 24"><path d="M7 11V6a2 2 0 1 1 4 0v5M13 11V5a2 2 0 1 1 4 0v6"/><path d="M7 11c0 4 1 8 5 8s5-4 5-8"/></svg></div>
           <h3>Индивидуальный подход</h3>
           <p>Учитываем состояние ваших ногтей, форму рук и пожелания по дизайну.</p>
         </div>
         <div class="card">
-          <div class="icon">🔒</div>
+          <div class="icon"><svg class="icon-svg" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/><circle cx="12" cy="15.5" r="1.2"/></svg></div>
           <h3>Стерильность превыше всего</h3>
           <p>Каждый инструмент обрабатывается по всем правилам, часть расходников — одноразовая.</p>
         </div>
@@ -85,7 +87,7 @@
   <section>
     <div class="container">
       <div class="quote-block">
-        <div class="goat">🐐</div>
+        <div class="goat"><svg class="icon-svg" viewBox="0 0 24 24"><path d="M8 4c-1 1-1 2.5 0 3.5M16 4c1 1 1 2.5 0 3.5"/><ellipse cx="12" cy="12" rx="5" ry="6"/><circle cx="10" cy="11" r=".8" fill="currentColor" stroke="none"/><circle cx="14" cy="11" r=".8" fill="currentColor" stroke="none"/><path d="M10.5 14.5c.5.5 2.5.5 3 0"/></svg></div>
         <p style="font-size:1.2rem; font-weight:700;">Мы верим, что маникюр — это маленький ежедневный повод для хорошего настроения.</p>
       </div>
     </div>
