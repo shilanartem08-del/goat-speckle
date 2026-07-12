@@ -101,10 +101,23 @@
   let editingId = null;
 
   async function loadNews() {
-    const { data, error } = await supabaseClient
-      .from("news")
-      .select("*")
-      .order("published_at", { ascending: false });
+    document.getElementById("news-body").innerHTML =
+      `<tr><td colspan="4">Загрузка…</td></tr>`;
+
+    let result;
+    try {
+      result = await withTimeout(
+        supabaseClient.from("news").select("*").order("published_at", { ascending: false }),
+        10000,
+        "новости"
+      );
+    } catch (err) {
+      document.getElementById("news-body").innerHTML =
+        `<tr><td colspan="4">Ошибка загрузки: ${escapeHtml(err.message)}</td></tr>`;
+      return;
+    }
+
+    const { data, error } = result;
 
     if (error) {
       document.getElementById("news-body").innerHTML =

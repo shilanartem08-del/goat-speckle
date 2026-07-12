@@ -106,11 +106,27 @@
   let editingId = null;
 
   async function loadServices() {
-    const { data, error } = await supabaseClient
-      .from("services")
-      .select("*")
-      .order("category", { ascending: true })
-      .order("sort_order", { ascending: true });
+    document.getElementById("services-body").innerHTML =
+      `<tr><td colspan="5">Загрузка…</td></tr>`;
+
+    let result;
+    try {
+      result = await withTimeout(
+        supabaseClient
+          .from("services")
+          .select("*")
+          .order("category", { ascending: true })
+          .order("sort_order", { ascending: true }),
+        10000,
+        "услуги"
+      );
+    } catch (err) {
+      document.getElementById("services-body").innerHTML =
+        `<tr><td colspan="5">Ошибка загрузки: ${escapeHtml(err.message)}</td></tr>`;
+      return;
+    }
+
+    const { data, error } = result;
 
     if (error) {
       document.getElementById("services-body").innerHTML =

@@ -88,10 +88,23 @@
   let currentFilter = "all";
 
   async function loadBookings() {
-    const { data, error } = await supabaseClient
-      .from("bookings")
-      .select("*")
-      .order("created_at", { ascending: false });
+    document.getElementById("bookings-body").innerHTML =
+      `<tr><td colspan="5">Загрузка…</td></tr>`;
+
+    let result;
+    try {
+      result = await withTimeout(
+        supabaseClient.from("bookings").select("*").order("created_at", { ascending: false }),
+        10000,
+        "заявки"
+      );
+    } catch (err) {
+      document.getElementById("bookings-body").innerHTML =
+        `<tr><td colspan="5">Ошибка загрузки: ${escapeHtml(err.message)}</td></tr>`;
+      return;
+    }
+
+    const { data, error } = result;
 
     if (error) {
       document.getElementById("bookings-body").innerHTML =
