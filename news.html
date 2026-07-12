@@ -9,6 +9,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase-config.js"></script>
 </head>
 <body>
 
@@ -47,7 +49,9 @@
 
   <section>
     <div class="container">
-      <div class="grid grid-3">
+      <!-- Новости подгружаются из базы данных через js/news-loader.js.
+           Пока идёт загрузка (или если база недоступна), показываем актуальные новости на момент публикации сайта. -->
+      <div class="grid grid-3" id="news-container">
 
         <article class="post-card">
           <div class="post-thumb"><svg class="icon-svg" viewBox="0 0 24 24"><path d="m4 20 4-11 7 7-11 4Z"/><path d="M13 4l1.5 1.5M17 3l1 2M20 7l-2 1M11 8l1 1"/></svg></div>
@@ -133,6 +137,7 @@
 </footer>
 
 <script src="js/script.js"></script>
+<script src="js/news-loader.js"></script>
 <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
 </body>
 </html>

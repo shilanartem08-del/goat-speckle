@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Услуги и цены — Админка Goat Speckle</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" type="image/png" href="../images/favicon-256.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/style.css">
+<link rel="stylesheet" href="admin.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../js/supabase-config.js"></script>
+<script src="admin-common.js"></script>
+</head>
+<body>
+
+<header class="admin-header">
+  <div class="logo" style="margin: 0;">
+    <img src="../images/logo-nav.jpg" alt="Goat Speckle">
+    Админка Goat Speckle
+  </div>
+  <div style="display:flex; align-items:center; gap: 16px;">
+    <span class="admin-user" id="user-email"></span>
+    <button class="btn btn-outline" id="logout-btn" style="min-height: 40px; padding: 8px 20px;">Выйти</button>
+  </div>
+</header>
+
+<nav class="admin-tabs" aria-label="Разделы админки">
+  <a href="dashboard.html">Заявки</a>
+  <a href="services.html" class="active">Услуги и цены</a>
+  <a href="news.html">Новости</a>
+</nav>
+
+<main id="main-content">
+  <div class="container" style="padding-top: 30px; padding-bottom: 60px;">
+
+    <div class="admin-toolbar">
+      <h2>Услуги и цены</h2>
+      <button class="btn btn-primary" id="add-btn" style="min-height: 44px; padding: 10px 22px;">+ Добавить услугу</button>
+    </div>
+
+    <p class="form-note" style="margin-bottom: 20px;">
+      Услуги группируются по полю «Категория» — на сайте они будут показаны отдельными таблицами
+      с заголовком по названию категории (например «Маникюр»). Скрытые услуги на сайте не отображаются.
+    </p>
+
+    <div class="admin-table-wrap">
+      <table class="admin-table" id="services-table">
+        <thead>
+          <tr>
+            <th>Категория</th>
+            <th>Услуга</th>
+            <th>Цена</th>
+            <th>Статус</th>
+            <th>Действия</th>
+          </tr>
+        </thead>
+        <tbody id="services-body"></tbody>
+      </table>
+      <div class="empty-state" id="empty-state" style="display:none;">Пока нет ни одной услуги — добавьте первую.</div>
+    </div>
+
+  </div>
+</main>
+
+<!-- Модальное окно добавления/редактирования услуги -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal-box">
+    <h3 id="modal-title">Добавить услугу</h3>
+    <form id="service-form" novalidate>
+      <input type="hidden" id="service-id">
+
+      <label for="service-category">Категория</label>
+      <p class="field-hint">Например: Маникюр, Педикюр, Дизайн ногтей</p>
+      <input type="text" id="service-category" placeholder="Маникюр" required aria-required="true">
+
+      <label for="service-title">Название услуги</label>
+      <input type="text" id="service-title" placeholder="Классический маникюр без покрытия" required aria-required="true">
+
+      <label for="service-price">Цена</label>
+      <p class="field-hint">Можно писать как угодно: «1500 ₽», «от 1900 ₽»</p>
+      <input type="text" id="service-price" placeholder="1500 ₽" required aria-required="true">
+
+      <label for="service-order">Порядок отображения</label>
+      <p class="field-hint">Чем меньше число, тем выше в списке</p>
+      <input type="number" id="service-order" value="0">
+
+      <label style="display:flex; align-items:center; gap:10px; margin-top:16px; font-weight:700;">
+        <input type="checkbox" id="service-visible" checked style="width:20px; height:20px;">
+        Показывать на сайте
+      </label>
+
+      <div class="modal-actions">
+        <button type="button" class="btn btn-outline" id="cancel-btn">Отмена</button>
+        <button type="submit" class="btn btn-primary">Сохранить</button>
+      </div>
+      <p class="form-status" id="form-status" role="alert"></p>
+    </form>
+  </div>
+</div>
+
+<script>
+  let allServices = [];
+  let editingId = null;
+
+  async function loadServices() {
+    const { data, error } = await supabaseClient
+      .from("services")
+      .select("*")
+      .order("category", { ascending: true })
+      .order("sort_order", { ascending: true });
+
+    if (error) {
+      document.getElementById("services-body").innerHTML =
+        `<tr><td colspan="5">Ошибка загрузки: ${escapeHtml(error.message)}</td></tr>`;
+      return;
+    }
+
+    allServices = data || [];
+    renderTable();
+  }
+
+  function renderTable() {
+    const tbody = document.getElementById("services-body");
+    const emptyState = document.getElementById("empty-state");
+
+    if (allServices.length === 0) {
+      tbody.innerHTML = "";
+      emptyState.style.display = "block";
+      return;
+    }
+    emptyState.style.display = "none";
+
+    tbody.innerHTML = allServices.map(s => `
+      <tr>
+        <td>${escapeHtml(s.category)}</td>
+        <td><strong>${escapeHtml(s.title)}</strong></td>
+        <td>${escapeHtml(s.price_text)}</td>
+        <td><span class="status-badge status-${s.is_visible ? "published" : "hidden"}">${s.is_visible ? "Показана" : "Скрыта"}</span></td>
+        <td>
+          <div class="row-actions">
+            <button class="icon-btn" data-action="edit" data-id="${s.id}" aria-label="Редактировать">
+              <svg class="icon-svg" viewBox="0 0 24 24"><path d="M4 20h4l11-11-4-4L4 16v4Z"/><path d="M13.5 6.5l4 4"/></svg>
+            </button>
+            <button class="icon-btn danger" data-action="delete" data-id="${s.id}" aria-label="Удалить">
+              <svg class="icon-svg" viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg>
+            </button>
+          </div>
+        </td>
+      </tr>
+    `).join("");
+
+    document.querySelectorAll('[data-action="edit"]').forEach(btn => {
+      btn.addEventListener("click", () => openEditModal(btn.dataset.id));
+    });
+    document.querySelectorAll('[data-action="delete"]').forEach(btn => {
+      btn.addEventListener("click", () => deleteService(btn.dataset.id));
+    });
+  }
+
+  function openAddModal() {
+    editingId = null;
+    document.getElementById("modal-title").textContent = "Добавить услугу";
+    document.getElementById("service-form").reset();
+    document.getElementById("service-visible").checked = true;
+    document.getElementById("service-order").value = 0;
+    document.getElementById("modal-overlay").classList.add("open");
+  }
+
+  function openEditModal(id) {
+    const s = allServices.find(x => x.id === id);
+    if (!s) return;
+    editingId = id;
+    document.getElementById("modal-title").textContent = "Редактировать услугу";
+    document.getElementById("service-category").value = s.category;
+    document.getElementById("service-title").value = s.title;
+    document.getElementById("service-price").value = s.price_text;
+    document.getElementById("service-order").value = s.sort_order;
+    document.getElementById("service-visible").checked = s.is_visible;
+    document.getElementById("modal-overlay").classList.add("open");
+  }
+
+  function closeModal() {
+    document.getElementById("modal-overlay").classList.remove("open");
+  }
+
+  async function deleteService(id) {
+    if (!confirm("Удалить эту услугу без возможности восстановления?")) return;
+    const { error } = await supabaseClient.from("services").delete().eq("id", id);
+    if (error) {
+      alert("Не удалось удалить: " + error.message);
+      return;
+    }
+    await loadServices();
+  }
+
+  document.getElementById("add-btn").addEventListener("click", openAddModal);
+  document.getElementById("cancel-btn").addEventListener("click", closeModal);
+  document.getElementById("modal-overlay").addEventListener("click", (e) => {
+    if (e.target.id === "modal-overlay") closeModal();
+  });
+
+  document.getElementById("service-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const payload = {
+      category: document.getElementById("service-category").value.trim(),
+      title: document.getElementById("service-title").value.trim(),
+      price_text: document.getElementById("service-price").value.trim(),
+      sort_order: parseInt(document.getElementById("service-order").value, 10) || 0,
+      is_visible: document.getElementById("service-visible").checked,
+    };
+
+    const statusEl = document.getElementById("form-status");
+
+    let error;
+    if (editingId) {
+      ({ error } = await supabaseClient.from("services").update(payload).eq("id", editingId));
+    } else {
+      ({ error } = await supabaseClient.from("services").insert([payload]));
+    }
+
+    if (error) {
+      statusEl.textContent = "Ошибка: " + error.message;
+      statusEl.classList.add("visible", "error");
+      return;
+    }
+
+    closeModal();
+    await loadServices();
+  });
+
+  setupLogout();
+
+  (async () => {
+    const session = await requireAuth();
+    if (!session) return;
+    await loadServices();
+  })();
+</script>
+
+</body>
+</html>
