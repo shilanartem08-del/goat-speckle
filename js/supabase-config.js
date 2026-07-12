@@ -22,8 +22,31 @@ const simpleLock = async (name, acquireTimeout, fn) => {
   return await fn();
 };
 
+// ВАЖНО: у Safari есть известная особенность — сетевой запрос fetch() иногда
+// падает с ошибкой "TypeError: Load failed" без реальной проблемы с сетью
+// (баг именно в WebKit/Safari, не в коде сайта). Оборачиваем fetch в
+// повторные попытки — это официально рекомендованный обход проблемы.
+// См. https://github.com/orgs/supabase/discussions/27477
+async function fetchWithRetry(url, options, maxAttempts = 3) {
+  let lastError;
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      return await fetch(url, options);
+    } catch (err) {
+      lastError = err;
+      if (attempt < maxAttempts) {
+        await new Promise((resolve) => setTimeout(resolve, attempt * 400));
+      }
+    }
+  }
+  throw lastError;
+}
+
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   auth: {
     lock: simpleLock,
+  },
+  global: {
+    fetch: fetchWithRetry,
   },
 });
