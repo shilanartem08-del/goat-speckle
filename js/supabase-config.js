@@ -6,8 +6,8 @@
 // они не дают доступа на удаление данных или к паролям,
 // доступ ограничен политиками (RLS), настроенными в supabase/schema.sql
 
-const SUPABASE_URL = "ВСТАВЬТЕ_СЮДА_PROJECT_URL"; // например: https://xxxxx.supabase.co
-const SUPABASE_ANON_KEY = "ВСТАВЬТЕ_СЮДА_ANON_KEY";
+const SUPABASE_URL = "https://pqbpavdsjkvofwrhysed.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBxYnBhdmRzamt2b2Z3cmh5c2VkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM4NzkxMjgsImV4cCI6MjA5OTQ1NTEyOH0.mb97dHF7Isx7MDZmkaUQ0FLhLTXpKwzP9cpu_81dIH8";
 
 // Не редактируйте строки ниже
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
