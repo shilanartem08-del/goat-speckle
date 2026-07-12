@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Вход в админку — Goat Speckle</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" type="image/png" href="../images/favicon-256.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/style.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../js/supabase-config.js"></script>
+</head>
+<body>
+
+<main id="main-content" style="min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px;">
+  <div class="contact-form" style="max-width: 420px; width: 100%;">
+    <div style="text-align: center; margin-bottom: 24px;">
+      <img src="../images/logo-nav.jpg" alt="Goat Speckle" style="width: 64px; height: 64px; border-radius: 50%; border: 2px solid var(--color-ink); margin: 0 auto 14px;">
+      <h1 style="font-family: var(--font-display); font-size: 1.6rem; margin: 0; color: var(--color-foreground);">Админка Goat Speckle</h1>
+      <p style="color: var(--color-muted); margin-top: 8px;">Войдите, чтобы увидеть заявки клиентов</p>
+    </div>
+
+    <form id="login-form" novalidate>
+      <label for="email">Email</label>
+      <input type="email" id="email" name="email" placeholder="you@example.com" autocomplete="email" required aria-required="true">
+
+      <label for="password">Пароль</label>
+      <input type="password" id="password" name="password" placeholder="Ваш пароль" autocomplete="current-password" required aria-required="true">
+
+      <button type="submit" class="btn btn-primary" id="login-btn">Войти</button>
+
+      <p class="form-status" id="login-status" role="alert"></p>
+    </form>
+  </div>
+</main>
+
+<script>
+  const form = document.getElementById("login-form");
+  const status = document.getElementById("login-status");
+  const btn = document.getElementById("login-btn");
+
+  function showStatus(type, message) {
+    status.textContent = message;
+    status.classList.remove("success", "error");
+    status.classList.add("visible", type);
+  }
+
+  // Если уже авторизован — сразу отправляем в панель
+  supabaseClient.auth.getSession().then(({ data }) => {
+    if (data.session) {
+      window.location.href = "dashboard.html";
+    }
+  });
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value;
+
+    btn.disabled = true;
+    btn.textContent = "Входим…";
+
+    const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+
+    if (error) {
+      showStatus("error", "Неверный email или пароль. Проверьте данные и попробуйте снова.");
+      btn.disabled = false;
+      btn.textContent = "Войти";
+      return;
+    }
+
+    window.location.href = "dashboard.html";
+  });
+</script>
+
+</body>
+</html>

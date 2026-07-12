@@ -84,7 +84,20 @@ document.addEventListener("DOMContentLoaded", () => {
       statusBox.setAttribute("role", "status");
     }
 
-    form.addEventListener("submit", (e) => {
+    // Резервный вариант через mailto, если Supabase не настроен/недоступен
+    function sendViaMailto(name, phone, message) {
+      const subject = encodeURIComponent("Заявка с сайта Goat Speckle");
+      const body = encodeURIComponent(
+        `Имя: ${name}\nТелефон: ${phone}\nСообщение: ${message || "—"}`
+      );
+      window.location.href = `mailto:shilanartem08@gmail.com?subject=${subject}&body=${body}`;
+      showStatus(
+        "success",
+        "Спасибо! Сейчас откроется почтовый клиент для отправки заявки — если этого не произошло, напишите нам напрямую на shilanartem08@gmail.com."
+      );
+    }
+
+    form.addEventListener("submit", async (e) => {
       e.preventDefault();
 
       const name = nameInput.value.trim();
@@ -109,23 +122,34 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      // Формируем текст письма и открываем почтовый клиент пользователя
-      const subject = encodeURIComponent("Заявка с сайта Goat Speckle");
-      const body = encodeURIComponent(
-        `Имя: ${name}\nТелефон: ${phone}\nСообщение: ${message || "—"}`
-      );
-
       submitBtn.disabled = true;
-      submitBtn.textContent = "Открываем почту…";
+      submitBtn.textContent = "Отправляем…";
 
-      window.location.href = `mailto:shilanartem08@gmail.com?subject=${subject}&body=${body}`;
+      // Если на странице подключён Supabase — сохраняем заявку в базу
+      if (typeof supabaseClient !== "undefined") {
+        try {
+          const { error } = await supabaseClient
+            .from("bookings")
+            .insert([{ name, phone, message: message || null }]);
 
-      showStatus(
-        "success",
-        "Спасибо! Сейчас откроется почтовый клиент для отправки заявки — если этого не произошло, напишите нам напрямую на shilanartem08@gmail.com."
-      );
+          if (error) throw error;
 
-      form.reset();
+          showStatus(
+            "success",
+            "Спасибо! Ваша заявка отправлена — мы свяжемся с вами в ближайшее время."
+          );
+          form.reset();
+        } catch (err) {
+          console.error("Supabase insert error:", err);
+          // Если запись в базу не удалась — используем резервный вариант
+          sendViaMailto(name, phone, message);
+          form.reset();
+        }
+      } else {
+        // Supabase не подключён на странице — используем mailto
+        sendViaMailto(name, phone, message);
+        form.reset();
+      }
 
       setTimeout(() => {
         submitBtn.disabled = false;
