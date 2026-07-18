@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Отзывы — Админка Goat Speckle</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" type="image/png" href="../images/favicon-256.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/style.css">
+<link rel="stylesheet" href="admin.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../js/supabase-config.js"></script>
+<script src="admin-common.js"></script>
+<script src="image-upload.js"></script>
+</head>
+<body>
+
+<header class="admin-header">
+  <div class="logo" style="margin: 0;">
+    <img src="../images/logo-nav.jpg" alt="Goat Speckle">
+    Админка Goat Speckle
+  </div>
+  <div style="display:flex; align-items:center; gap: 16px;">
+    <span class="admin-user" id="user-email"></span>
+    <button class="btn btn-outline" id="logout-btn" style="min-height: 40px; padding: 8px 20px;">Выйти</button>
+  </div>
+</header>
+
+<nav class="admin-tabs" aria-label="Разделы админки">
+  <a href="dashboard.html">Заявки</a>
+  <a href="services.html">Услуги и цены</a>
+  <a href="news.html">Новости</a>
+  <a href="reviews.html" class="active">Отзывы</a>
+  <a href="gallery.html">Галерея</a>
+</nav>
+
+<main id="main-content">
+  <div class="container" style="padding-top: 30px; padding-bottom: 60px;">
+
+    <div class="admin-toolbar">
+      <h2>Отзывы клиентов</h2>
+      <button class="btn btn-primary" id="add-btn" style="min-height: 44px; padding: 10px 22px;">+ Добавить отзыв</button>
+    </div>
+
+    <p class="form-note" style="margin-bottom: 20px;">
+      Отзывы с самым маленьким «Порядком отображения» показываются первыми на странице «Отзывы» сайта.
+      Фото необязательно — например, скриншот переписки или отзыва в мессенджере.
+    </p>
+
+    <div class="admin-table-wrap">
+      <table class="admin-table" id="reviews-table">
+        <thead>
+          <tr>
+            <th>Фото</th>
+            <th>Имя</th>
+            <th>Оценка</th>
+            <th>Текст</th>
+            <th>Статус</th>
+            <th>Действия</th>
+          </tr>
+        </thead>
+        <tbody id="reviews-body"></tbody>
+      </table>
+      <div class="empty-state" id="empty-state" style="display:none;">Пока нет ни одного отзыва — добавьте первый.</div>
+    </div>
+
+  </div>
+</main>
+
+<!-- Модальное окно добавления/редактирования отзыва -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal-box">
+    <h3 id="modal-title">Добавить отзыв</h3>
+    <form id="review-form" novalidate>
+      <input type="hidden" id="review-id">
+      <input type="hidden" id="review-photo-url">
+
+      <label for="review-name">Имя клиента</label>
+      <input type="text" id="review-name" placeholder="Анна" required aria-required="true">
+
+      <label for="review-rating">Оценка</label>
+      <select id="review-rating" required aria-required="true">
+        <option value="5">5 — отлично</option>
+        <option value="4">4 — хорошо</option>
+        <option value="3">3 — нормально</option>
+        <option value="2">2 — плохо</option>
+        <option value="1">1 — очень плохо</option>
+      </select>
+
+      <label for="review-text">Текст отзыва</label>
+      <textarea id="review-text" placeholder="«Хожу сюда уже полгода...»" required aria-required="true"></textarea>
+
+      <label for="review-photo-input">Фото (необязательно)</label>
+      <p class="field-hint">Скриншот переписки/отзыва. JPG, PNG, WEBP или GIF, до 5 МБ</p>
+      <input type="file" id="review-photo-input" accept="image/jpeg,image/png,image/webp,image/gif">
+      <div id="review-photo-preview" class="image-preview" style="display:none;">
+        <img id="review-photo-preview-img" alt="Предпросмотр фото отзыва">
+        <button type="button" class="icon-btn danger" id="review-photo-remove-btn" aria-label="Убрать фото">
+          <svg class="icon-svg" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+      </div>
+
+      <label for="review-order">Порядок отображения</label>
+      <p class="field-hint">Чем меньше число, тем выше в списке</p>
+      <input type="number" id="review-order" value="0">
+
+      <label style="display:flex; align-items:center; gap:10px; margin-top:16px; font-weight:700;">
+        <input type="checkbox" id="review-visible" checked style="width:20px; height:20px;">
+        Показывать на сайте
+      </label>
+
+      <div class="modal-actions">
+        <button type="button" class="btn btn-outline" id="cancel-btn">Отмена</button>
+        <button type="submit" class="btn btn-primary" id="save-btn">Сохранить</button>
+      </div>
+      <p class="form-status" id="form-status" role="alert"></p>
+    </form>
+  </div>
+</div>
+
+<script>
+  let allReviews = [];
+  let editingId = null;
+  let pendingPhotoFile = null;
+  let photoWasRemoved = false;
+
+  async function loadReviews() {
+    document.getElementById("reviews-body").innerHTML =
+      `<tr><td colspan="6">Загрузка…</td></tr>`;
+
+    let result;
+    try {
+      result = await withTimeout(
+        supabaseClient.from("reviews").select("*").order("sort_order", { ascending: true }),
+        10000,
+        "отзывы"
+      );
+    } catch (err) {
+      document.getElementById("reviews-body").innerHTML =
+        `<tr><td colspan="6">Ошибка загрузки: ${escapeHtml(err.message)}</td></tr>`;
+      return;
+    }
+
+    const { data, error } = result;
+
+    if (error) {
+      document.getElementById("reviews-body").innerHTML =
+        `<tr><td colspan="6">Ошибка загрузки: ${escapeHtml(error.message)}</td></tr>`;
+      return;
+    }
+
+    allReviews = data || [];
+    renderTable();
+  }
+
+  function starsText(rating) {
+    return "★".repeat(rating) + "☆".repeat(5 - rating);
+  }
+
+  function renderTable() {
+    const tbody = document.getElementById("reviews-body");
+    const emptyState = document.getElementById("empty-state");
+
+    if (allReviews.length === 0) {
+      tbody.innerHTML = "";
+      emptyState.style.display = "block";
+      return;
+    }
+    emptyState.style.display = "none";
+
+    tbody.innerHTML = allReviews.map(r => `
+      <tr>
+        <td>${r.photo_url ? `<img src="${escapeHtml(r.photo_url)}" alt="Фото отзыва" style="width:48px;height:48px;object-fit:cover;border-radius:8px;border:2px solid var(--color-ink);">` : "—"}</td>
+        <td><strong>${escapeHtml(r.client_name)}</strong></td>
+        <td>${starsText(r.rating)}</td>
+        <td style="max-width:280px;">${escapeHtml(r.review_text.length > 80 ? r.review_text.slice(0, 80) + "…" : r.review_text)}</td>
+        <td><span class="status-badge status-${r.is_visible ? "published" : "hidden"}">${r.is_visible ? "Показан" : "Скрыт"}</span></td>
+        <td>
+          <div class="row-actions">
+            <button class="icon-btn" data-action="edit" data-id="${r.id}" aria-label="Редактировать">
+              <svg class="icon-svg" viewBox="0 0 24 24"><path d="M4 20h4l11-11-4-4L4 16v4Z"/><path d="M13.5 6.5l4 4"/></svg>
+            </button>
+            <button class="icon-btn danger" data-action="delete" data-id="${r.id}" aria-label="Удалить">
+              <svg class="icon-svg" viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg>
+            </button>
+          </div>
+        </td>
+      </tr>
+    `).join("");
+
+    document.querySelectorAll('[data-action="edit"]').forEach(btn => {
+      btn.addEventListener("click", () => openEditModal(btn.dataset.id));
+    });
+    document.querySelectorAll('[data-action="delete"]').forEach(btn => {
+      btn.addEventListener("click", () => deleteReview(btn.dataset.id));
+    });
+  }
+
+  function resetPhotoState() {
+    pendingPhotoFile = null;
+    photoWasRemoved = false;
+    document.getElementById("review-photo-input").value = "";
+    document.getElementById("review-photo-preview").style.display = "none";
+    document.getElementById("review-photo-preview-img").src = "";
+  }
+
+  function showPhotoPreview(src) {
+    document.getElementById("review-photo-preview-img").src = src;
+    document.getElementById("review-photo-preview").style.display = "flex";
+  }
+
+  function openAddModal() {
+    editingId = null;
+    resetPhotoState();
+    document.getElementById("modal-title").textContent = "Добавить отзыв";
+    document.getElementById("review-form").reset();
+    document.getElementById("review-photo-url").value = "";
+    document.getElementById("review-visible").checked = true;
+    document.getElementById("review-order").value = 0;
+    document.getElementById("review-rating").value = "5";
+    document.getElementById("modal-overlay").classList.add("open");
+  }
+
+  function openEditModal(id) {
+    const r = allReviews.find(x => x.id === id);
+    if (!r) return;
+    editingId = id;
+    resetPhotoState();
+    document.getElementById("modal-title").textContent = "Редактировать отзыв";
+    document.getElementById("review-name").value = r.client_name;
+    document.getElementById("review-rating").value = String(r.rating);
+    document.getElementById("review-text").value = r.review_text;
+    document.getElementById("review-photo-url").value = r.photo_url || "";
+    document.getElementById("review-order").value = r.sort_order;
+    document.getElementById("review-visible").checked = r.is_visible;
+    if (r.photo_url) {
+      showPhotoPreview(r.photo_url);
+    }
+    document.getElementById("modal-overlay").classList.add("open");
+  }
+
+  function closeModal() {
+    document.getElementById("modal-overlay").classList.remove("open");
+  }
+
+  async function deleteReview(id) {
+    if (!confirm("Удалить этот отзыв без возможности восстановления?")) return;
+    const review = allReviews.find(x => x.id === id);
+    const { error } = await supabaseClient.from("reviews").delete().eq("id", id);
+    if (error) {
+      alert("Не удалось удалить: " + error.message);
+      return;
+    }
+    if (review && review.photo_url) {
+      await deleteImageFromStorage(review.photo_url, "review-photos");
+    }
+    await loadReviews();
+  }
+
+  document.getElementById("add-btn").addEventListener("click", openAddModal);
+  document.getElementById("cancel-btn").addEventListener("click", closeModal);
+  document.getElementById("modal-overlay").addEventListener("click", (e) => {
+    if (e.target.id === "modal-overlay") closeModal();
+  });
+
+  document.getElementById("review-photo-input").addEventListener("change", (e) => {
+    const file = e.target.files[0];
+    const statusEl = document.getElementById("form-status");
+    if (!file) return;
+
+    const validationError = validateImageFile(file);
+    if (validationError) {
+      statusEl.textContent = validationError;
+      statusEl.classList.add("visible", "error");
+      e.target.value = "";
+      return;
+    }
+
+    statusEl.classList.remove("visible", "error");
+    pendingPhotoFile = file;
+    photoWasRemoved = false;
+    showPhotoPreview(URL.createObjectURL(file));
+  });
+
+  document.getElementById("review-photo-remove-btn").addEventListener("click", () => {
+    pendingPhotoFile = null;
+    photoWasRemoved = true;
+    document.getElementById("review-photo-input").value = "";
+    document.getElementById("review-photo-preview").style.display = "none";
+  });
+
+  document.getElementById("review-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const statusEl = document.getElementById("form-status");
+    const saveBtn = document.getElementById("save-btn");
+    statusEl.classList.remove("visible", "error");
+
+    saveBtn.disabled = true;
+    saveBtn.textContent = "Сохраняем…";
+
+    try {
+      let photoUrl = document.getElementById("review-photo-url").value || null;
+      const previousPhotoUrl = photoUrl;
+
+      if (pendingPhotoFile) {
+        statusEl.textContent = "Загружаем фото…";
+        statusEl.classList.add("visible");
+        photoUrl = await uploadImageToStorage(pendingPhotoFile, "review-photos");
+      } else if (photoWasRemoved) {
+        photoUrl = null;
+      }
+
+      const payload = {
+        client_name: document.getElementById("review-name").value.trim(),
+        rating: parseInt(document.getElementById("review-rating").value, 10),
+        review_text: document.getElementById("review-text").value.trim(),
+        photo_url: photoUrl,
+        sort_order: parseInt(document.getElementById("review-order").value, 10) || 0,
+        is_visible: document.getElementById("review-visible").checked,
+      };
+
+      let error;
+      if (editingId) {
+        ({ error } = await supabaseClient.from("reviews").update(payload).eq("id", editingId));
+      } else {
+        ({ error } = await supabaseClient.from("reviews").insert([payload]));
+      }
+
+      if (error) throw error;
+
+      // Если фото было заменено или удалено — чистим старый файл в хранилище
+      if (previousPhotoUrl && previousPhotoUrl !== photoUrl) {
+        await deleteImageFromStorage(previousPhotoUrl, "review-photos");
+      }
+
+      closeModal();
+      await loadReviews();
+    } catch (err) {
+      statusEl.textContent = "Ошибка: " + err.message;
+      statusEl.classList.add("visible", "error");
+    } finally {
+      saveBtn.disabled = false;
+      saveBtn.textContent = "Сохранить";
+    }
+  });
+
+  setupLogout();
+
+  (async () => {
+    const session = await requireAuth();
+    if (!session) return;
+    await loadReviews();
+  })();
+</script>
+
+</body>
+</html>

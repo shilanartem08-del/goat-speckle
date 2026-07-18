@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Галерея — Админка Goat Speckle</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" type="image/png" href="../images/favicon-256.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/style.css">
+<link rel="stylesheet" href="admin.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../js/supabase-config.js"></script>
+<script src="admin-common.js"></script>
+<script src="image-upload.js"></script>
+</head>
+<body>
+
+<header class="admin-header">
+  <div class="logo" style="margin: 0;">
+    <img src="../images/logo-nav.jpg" alt="Goat Speckle">
+    Админка Goat Speckle
+  </div>
+  <div style="display:flex; align-items:center; gap: 16px;">
+    <span class="admin-user" id="user-email"></span>
+    <button class="btn btn-outline" id="logout-btn" style="min-height: 40px; padding: 8px 20px;">Выйти</button>
+  </div>
+</header>
+
+<nav class="admin-tabs" aria-label="Разделы админки">
+  <a href="dashboard.html">Заявки</a>
+  <a href="services.html">Услуги и цены</a>
+  <a href="news.html">Новости</a>
+  <a href="reviews.html">Отзывы</a>
+  <a href="gallery.html" class="active">Галерея</a>
+</nav>
+
+<main id="main-content">
+  <div class="container" style="padding-top: 30px; padding-bottom: 60px;">
+
+    <div class="admin-toolbar">
+      <h2>Галерея работ</h2>
+      <button class="btn btn-primary" id="add-btn" style="min-height: 44px; padding: 10px 22px;">+ Добавить фото</button>
+    </div>
+
+    <p class="form-note" style="margin-bottom: 20px;">
+      Фото с самым маленьким «Порядком отображения» показываются первыми в галерее на сайте.
+    </p>
+
+    <div class="gallery-admin-grid" id="gallery-grid"></div>
+    <div class="empty-state" id="empty-state" style="display:none;">Пока нет ни одного фото — добавьте первое.</div>
+
+  </div>
+</main>
+
+<!-- Модальное окно добавления/редактирования фото -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal-box">
+    <h3 id="modal-title">Добавить фото</h3>
+    <form id="gallery-form" novalidate>
+      <input type="hidden" id="gallery-id">
+      <input type="hidden" id="gallery-photo-url">
+
+      <label for="gallery-photo-input">Фото работы</label>
+      <p class="field-hint">JPG, PNG, WEBP или GIF, до 5 МБ</p>
+      <input type="file" id="gallery-photo-input" accept="image/jpeg,image/png,image/webp,image/gif">
+      <div id="gallery-photo-preview" class="image-preview" style="display:none;">
+        <img id="gallery-photo-preview-img" alt="Предпросмотр фото">
+        <button type="button" class="icon-btn danger" id="gallery-photo-remove-btn" aria-label="Убрать фото">
+          <svg class="icon-svg" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+      </div>
+
+      <label for="gallery-title">Подпись к фото (необязательно)</label>
+      <input type="text" id="gallery-title" placeholder="Например: Однотонное покрытие гель-лак">
+
+      <label for="gallery-order">Порядок отображения</label>
+      <p class="field-hint">Чем меньше число, тем выше в списке</p>
+      <input type="number" id="gallery-order" value="0">
+
+      <label style="display:flex; align-items:center; gap:10px; margin-top:16px; font-weight:700;">
+        <input type="checkbox" id="gallery-visible" checked style="width:20px; height:20px;">
+        Показывать на сайте
+      </label>
+
+      <div class="modal-actions">
+        <button type="button" class="btn btn-outline" id="cancel-btn">Отмена</button>
+        <button type="submit" class="btn btn-primary" id="save-btn">Сохранить</button>
+      </div>
+      <p class="form-status" id="form-status" role="alert"></p>
+    </form>
+  </div>
+</div>
+
+<script>
+  let allGalleryItems = [];
+  let editingId = null;
+  let pendingPhotoFile = null;
+
+  async function loadGallery() {
+    const grid = document.getElementById("gallery-grid");
+    grid.innerHTML = `<p style="grid-column: 1/-1;">Загрузка…</p>`;
+
+    let result;
+    try {
+      result = await withTimeout(
+        supabaseClient.from("gallery").select("*").order("sort_order", { ascending: true }),
+        10000,
+        "галерея"
+      );
+    } catch (err) {
+      grid.innerHTML = `<p style="grid-column: 1/-1; color:var(--color-destructive);">Ошибка загрузки: ${escapeHtml(err.message)}</p>`;
+      return;
+    }
+
+    const { data, error } = result;
+
+    if (error) {
+      grid.innerHTML = `<p style="grid-column: 1/-1; color:var(--color-destructive);">Ошибка загрузки: ${escapeHtml(error.message)}</p>`;
+      return;
+    }
+
+    allGalleryItems = data || [];
+    renderGrid();
+  }
+
+  function renderGrid() {
+    const grid = document.getElementById("gallery-grid");
+    const emptyState = document.getElementById("empty-state");
+
+    if (allGalleryItems.length === 0) {
+      grid.innerHTML = "";
+      emptyState.style.display = "block";
+      return;
+    }
+    emptyState.style.display = "none";
+
+    grid.innerHTML = allGalleryItems.map(g => `
+      <div class="gallery-admin-card">
+        <img src="${escapeHtml(g.photo_url)}" alt="${escapeHtml(g.title || "Фото работы")}">
+        <div class="gallery-admin-card-body">
+          <p class="gallery-admin-card-title">${escapeHtml(g.title || "Без подписи")}</p>
+          <span class="status-badge status-${g.is_visible ? "published" : "hidden"}">${g.is_visible ? "Показано" : "Скрыто"}</span>
+          <div class="row-actions" style="margin-top:10px;">
+            <button class="icon-btn" data-action="edit" data-id="${g.id}" aria-label="Редактировать">
+              <svg class="icon-svg" viewBox="0 0 24 24"><path d="M4 20h4l11-11-4-4L4 16v4Z"/><path d="M13.5 6.5l4 4"/></svg>
+            </button>
+            <button class="icon-btn danger" data-action="delete" data-id="${g.id}" aria-label="Удалить">
+              <svg class="icon-svg" viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    `).join("");
+
+    document.querySelectorAll('[data-action="edit"]').forEach(btn => {
+      btn.addEventListener("click", () => openEditModal(btn.dataset.id));
+    });
+    document.querySelectorAll('[data-action="delete"]').forEach(btn => {
+      btn.addEventListener("click", () => deleteGalleryItem(btn.dataset.id));
+    });
+  }
+
+  function resetPhotoState() {
+    pendingPhotoFile = null;
+    document.getElementById("gallery-photo-input").value = "";
+    document.getElementById("gallery-photo-preview").style.display = "none";
+    document.getElementById("gallery-photo-preview-img").src = "";
+  }
+
+  function showPhotoPreview(src) {
+    document.getElementById("gallery-photo-preview-img").src = src;
+    document.getElementById("gallery-photo-preview").style.display = "flex";
+  }
+
+  function openAddModal() {
+    editingId = null;
+    resetPhotoState();
+    document.getElementById("modal-title").textContent = "Добавить фото";
+    document.getElementById("gallery-form").reset();
+    document.getElementById("gallery-photo-url").value = "";
+    document.getElementById("gallery-visible").checked = true;
+    document.getElementById("gallery-order").value = 0;
+    document.getElementById("modal-overlay").classList.add("open");
+  }
+
+  function openEditModal(id) {
+    const g = allGalleryItems.find(x => x.id === id);
+    if (!g) return;
+    editingId = id;
+    resetPhotoState();
+    document.getElementById("modal-title").textContent = "Редактировать фото";
+    document.getElementById("gallery-title").value = g.title || "";
+    document.getElementById("gallery-photo-url").value = g.photo_url;
+    document.getElementById("gallery-order").value = g.sort_order;
+    document.getElementById("gallery-visible").checked = g.is_visible;
+    showPhotoPreview(g.photo_url);
+    document.getElementById("modal-overlay").classList.add("open");
+  }
+
+  function closeModal() {
+    document.getElementById("modal-overlay").classList.remove("open");
+  }
+
+  async function deleteGalleryItem(id) {
+    if (!confirm("Удалить это фото без возможности восстановления?")) return;
+    const item = allGalleryItems.find(x => x.id === id);
+    const { error } = await supabaseClient.from("gallery").delete().eq("id", id);
+    if (error) {
+      alert("Не удалось удалить: " + error.message);
+      return;
+    }
+    if (item && item.photo_url) {
+      await deleteImageFromStorage(item.photo_url, "gallery-photos");
+    }
+    await loadGallery();
+  }
+
+  document.getElementById("add-btn").addEventListener("click", openAddModal);
+  document.getElementById("cancel-btn").addEventListener("click", closeModal);
+  document.getElementById("modal-overlay").addEventListener("click", (e) => {
+    if (e.target.id === "modal-overlay") closeModal();
+  });
+
+  document.getElementById("gallery-photo-input").addEventListener("change", (e) => {
+    const file = e.target.files[0];
+    const statusEl = document.getElementById("form-status");
+    if (!file) return;
+
+    const validationError = validateImageFile(file);
+    if (validationError) {
+      statusEl.textContent = validationError;
+      statusEl.classList.add("visible", "error");
+      e.target.value = "";
+      return;
+    }
+
+    statusEl.classList.remove("visible", "error");
+    pendingPhotoFile = file;
+    showPhotoPreview(URL.createObjectURL(file));
+  });
+
+  document.getElementById("gallery-photo-remove-btn").addEventListener("click", () => {
+    pendingPhotoFile = null;
+    document.getElementById("gallery-photo-input").value = "";
+    document.getElementById("gallery-photo-preview").style.display = "none";
+    document.getElementById("gallery-photo-url").value = "";
+  });
+
+  document.getElementById("gallery-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const statusEl = document.getElementById("form-status");
+    const saveBtn = document.getElementById("save-btn");
+    statusEl.classList.remove("visible", "error");
+
+    let photoUrl = document.getElementById("gallery-photo-url").value || null;
+
+    if (!pendingPhotoFile && !photoUrl) {
+      statusEl.textContent = "Пожалуйста, выберите фото";
+      statusEl.classList.add("visible", "error");
+      return;
+    }
+
+    saveBtn.disabled = true;
+    saveBtn.textContent = "Сохраняем…";
+
+    try {
+      const previousPhotoUrl = photoUrl;
+
+      if (pendingPhotoFile) {
+        statusEl.textContent = "Загружаем фото…";
+        statusEl.classList.add("visible");
+        photoUrl = await uploadImageToStorage(pendingPhotoFile, "gallery-photos");
+      }
+
+      const payload = {
+        title: document.getElementById("gallery-title").value.trim() || null,
+        photo_url: photoUrl,
+        sort_order: parseInt(document.getElementById("gallery-order").value, 10) || 0,
+        is_visible: document.getElementById("gallery-visible").checked,
+      };
+
+      let error;
+      if (editingId) {
+        ({ error } = await supabaseClient.from("gallery").update(payload).eq("id", editingId));
+      } else {
+        ({ error } = await supabaseClient.from("gallery").insert([payload]));
+      }
+
+      if (error) throw error;
+
+      if (previousPhotoUrl && pendingPhotoFile && previousPhotoUrl !== photoUrl) {
+        await deleteImageFromStorage(previousPhotoUrl, "gallery-photos");
+      }
+
+      closeModal();
+      await loadGallery();
+    } catch (err) {
+      statusEl.textContent = "Ошибка: " + err.message;
+      statusEl.classList.add("visible", "error");
+    } finally {
+      saveBtn.disabled = false;
+      saveBtn.textContent = "Сохранить";
+    }
+  });
+
+  setupLogout();
+
+  (async () => {
+    const session = await requireAuth();
+    if (!session) return;
+    await loadGallery();
+  })();
+</script>
+
+</body>
+</html>

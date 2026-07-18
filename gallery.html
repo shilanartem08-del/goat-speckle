@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Отзывы — Goat Speckle</title>
-<meta name="description" content="Отзывы клиентов маникюрной студии Goat Speckle. Узнайте, что говорят о нас те, кто уже был на процедуре.">
+<title>Галерея работ — Goat Speckle</title>
+<meta name="description" content="Примеры работ маникюрной студии Goat Speckle: покрытия, дизайн и укрепление ногтей.">
 <link rel="icon" type="image/png" href="images/favicon-256.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -42,41 +42,40 @@
 
   <section class="page-hero">
     <div class="container">
-      <div class="breadcrumbs">ОТЗЫВЫ</div>
-      <h1>Что говорят наши клиентки</h1>
-      <p>Честные впечатления о процедурах, атмосфере и работе мастеров Goat Speckle.</p>
+      <div class="breadcrumbs">ГАЛЕРЕЯ</div>
+      <h1>Примеры наших работ</h1>
+      <p>Покрытия, дизайн и уход — то, что делаем каждый день в Goat Speckle.</p>
     </div>
   </section>
 
   <section>
     <div class="container">
-
-<div class="reviews-summary" id="reviews-summary" style="display:none;">
-        <div class="score" id="reviews-score">—</div>
-        <div class="score-details">
-          <div class="review-stars" id="reviews-summary-stars" role="img" aria-label="Средний рейтинг"></div>
-          <p>на основе отзывов клиенток студии</p>
-        </div>
+      <div class="gallery-grid" id="gallery-container">
+        <p style="grid-column: 1/-1; text-align:center; color: var(--color-muted);">Загружаем фото…</p>
       </div>
-
-      <div class="grid grid-3" id="reviews-container">
-        <p style="grid-column: 1/-1; text-align:center; color: var(--color-muted);">Загружаем отзывы…</p>
-      </div>
-
     </div>
   </section>
 
   <section>
     <div class="container">
       <div class="cta-banner">
-        <h2>Хотите стать нашим следующим отзывом?</h2>
-        <p>Запишитесь на маникюр — и поделитесь впечатлением, когда увидите результат.</p>
+        <h2>Хотите такой же результат?</h2>
+        <p>Запишитесь на маникюр — подберём дизайн специально под вас.</p>
         <a href="contacts.html" class="btn btn-primary">Записаться на маникюр</a>
       </div>
     </div>
   </section>
 
 </main>
+
+<!-- Полноэкранный просмотр фото -->
+<div class="lightbox-overlay" id="lightbox-overlay">
+  <button type="button" class="lightbox-close" id="lightbox-close" aria-label="Закрыть">
+    <svg class="icon-svg" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>
+  </button>
+  <img id="lightbox-image" src="" alt="">
+  <p id="lightbox-caption"></p>
+</div>
 
 <footer class="site-footer">
   <div class="container">
@@ -120,7 +119,7 @@
 
 <script src="js/script.js"></script>
 <script src="js/cookie-consent.js"></script>
-<script src="js/reviews-loader.js"></script>
+<script src="js/gallery-loader.js"></script>
 <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
 </body>
 </html>
