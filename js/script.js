@@ -47,6 +47,7 @@ document.addEventListener("DOMContentLoaded", () => {
   if (form) {
     const nameInput = form.querySelector("#name");
     const phoneInput = form.querySelector("#phone");
+    const consentInput = form.querySelector("#consent");
     const submitBtn = form.querySelector('button[type="submit"]');
     const statusBox = document.getElementById("form-status");
 
@@ -75,6 +76,10 @@ document.addEventListener("DOMContentLoaded", () => {
         input.addEventListener("input", () => clearFieldError(input));
       }
     });
+
+    if (consentInput) {
+      consentInput.addEventListener("change", () => clearFieldError(consentInput));
+    }
 
     function showStatus(type, message) {
       if (!statusBox) return;
@@ -116,9 +121,19 @@ document.addEventListener("DOMContentLoaded", () => {
         hasError = true;
       }
 
+      // Согласие на обработку персональных данных обязательно по 152-ФЗ —
+      // без явной отдельной отметки заявка не отправляется
+      if (consentInput && !consentInput.checked) {
+        showFieldError(consentInput, "Необходимо согласие на обработку персональных данных");
+        hasError = true;
+      }
+
       if (hasError) {
         showStatus("error", "Проверьте, пожалуйста, обязательные поля ниже.");
-        (nameInput.classList.contains("field-error") ? nameInput : phoneInput).focus();
+        const firstErrorInput = [nameInput, phoneInput, consentInput].find(
+          (input) => input && input.classList.contains("field-error")
+        );
+        if (firstErrorInput) firstErrorInput.focus();
         return;
       }
 

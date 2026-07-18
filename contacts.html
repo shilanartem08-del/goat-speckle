@@ -80,10 +80,18 @@
             <label for="message">Комментарий</label>
             <textarea id="message" name="message" placeholder="Какая услуга вас интересует, удобная дата и время" autocomplete="off"></textarea>
 
+            <label class="consent-checkbox-label">
+              <input type="checkbox" id="consent" name="consent" required aria-required="true" aria-describedby="consent-error">
+              <span>
+                Я согласен(на) на <a href="privacy-policy.html" target="_blank" rel="noopener">обработку персональных данных</a>
+                <span class="required" aria-hidden="true">*</span>
+              </span>
+            </label>
+            <p class="field-error-msg" id="consent-error" role="alert"></p>
+
             <button type="submit" class="btn btn-primary">Отправить заявку</button>
 
             <p class="form-status" id="form-status"></p>
-            <p class="form-note">Отправляя форму, вы соглашаетесь на обработку персональных данных.</p>
           </form>
         </div>
 
@@ -135,12 +143,15 @@
       </div>
     </div>
     <div class="footer-bottom">
-      © <span id="year"></span> Goat Speckle. Все права защищены. · <a href="admin/login.html" style="opacity:0.5;">Админка</a>
+      © <span id="year"></span> Goat Speckle. Все права защищены. ·
+      <a href="privacy-policy.html">Политика конфиденциальности</a> ·
+      <a href="admin/login.html" style="opacity:0.5;">Админка</a>
     </div>
   </div>
 </footer>
 
 <script src="js/script.js"></script>
+<script src="js/cookie-consent.js"></script>
 <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
 </body>
 </html>
