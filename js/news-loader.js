@@ -25,6 +25,27 @@ document.addEventListener("DOMContentLoaded", async () => {
       return div.innerHTML;
     }
 
+    // Защита от XSS через javascript:/data: URI в поле "Ссылка" —
+    // escapeHtml() экранирует HTML-спецсимволы, но не проверяет схему
+    // самого URL, поэтому это отдельная, обязательная проверка.
+    function sanitizeUrl(url) {
+      if (!url) return "#";
+      const trimmed = url.trim();
+      // protocol-relative ссылки (//evil.com) не считаем безопасными:
+      // хотя это не XSS, это может увести пользователя на сторонний домен
+      // под видом ссылки на наш сайт
+      if (trimmed.startsWith("//")) return "#";
+      try {
+        const parsed = new URL(trimmed, window.location.origin);
+        if (parsed.protocol === "http:" || parsed.protocol === "https:") {
+          return trimmed;
+        }
+      } catch (e) {
+        // некорректный URL — считаем небезопасным
+      }
+      return "#";
+    }
+
     function formatDate(isoDate) {
       const d = new Date(isoDate + "T00:00:00");
       return d.toLocaleDateString("ru-RU", { day: "numeric", month: "long", year: "numeric" });
@@ -32,8 +53,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const html = data
       .map((item) => {
-        const linkHref = item.link_url ? item.link_url : "#";
-        const targetAttrs = item.link_url ? ' target="_blank" rel="noopener"' : "";
+        const linkHref = sanitizeUrl(item.link_url);
+        const targetAttrs = linkHref !== "#" ? ' target="_blank" rel="noopener"' : "";
         const linkLabel = escapeHtml(item.link_label || "Подробнее");
 
         return `
